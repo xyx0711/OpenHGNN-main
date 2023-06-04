@@ -102,7 +102,8 @@ SUPPORTED_MODELS = {
     'Mg2vec': 'openhgnn.models.MG2vec',
     'DHNE': 'openhgnn.models.DHNE',
     'DiffMG': 'openhgnn.models.DiffMG',
-    'HGNN_AC': 'openhgnn.models.HGNN_AC'
+    'HGNN_AC': 'openhgnn.models.HGNN_AC',
+    'AEHCL': 'openhgnn.models.AEHCL'
 }
 
 from .CompGCN import CompGCN

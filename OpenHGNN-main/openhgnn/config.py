@@ -783,6 +783,15 @@ class Config(object):
             self.search_epochs = conf.getint("DiffMG", "search_epochs")
             # self.use_norm = conf.get("DiffMG", "use_norm")
             # self.out_nl = conf.get("DiffMG", "out_nl")
+        elif self.model_name == 'AEHCL':
+            self.lr = conf.getfloat("AEHCL", "lr")
+            self.hidden_dim = conf.getint("AEHCL", "hidden_dim")
+            self.weight_intra_pair = conf.getfloat("AEHCL", "weight_intra_pair")
+            self.weight_intra_multi = conf.getfloat("AEHCL", "weight_intra_multi")
+            self.weight_inter = conf.getfloat("AEHCL", "weight_inter")
+            self.num_of_attention_heads = conf.getint("AEHCL", "num_of_attention_heads")
+            self.t = conf.getfloat("AEHCL", "t")
+            self.batch_size = conf.getint("AEHCL", "batch_size")
 
         if gpu == -1:
             self.device = th.device('cpu')

@@ -72,6 +72,7 @@ SUPPORTED_FLOWS = {
     'mg2vec_trainer': 'openhgnn.trainerflow.mg2vec_trainer',
     'DHNE_trainer': 'openhgnn.trainerflow.DHNE_trainer',
     'DiffMG_trainer': 'openhgnn.trainerflow.DiffMG_trainer',
+    'abnorm_event_detection': 'openhgnn.trainerflow.AbnormEventDetection',
 }
 
 from .node_classification import NodeClassification
