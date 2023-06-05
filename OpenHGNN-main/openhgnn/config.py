@@ -781,8 +781,6 @@ class Config(object):
             self.search_steps_s = conf.getint("DiffMG", "search_steps_s")
             self.search_steps_t = conf.getint("DiffMG", "search_steps_t")
             self.search_epochs = conf.getint("DiffMG", "search_epochs")
-            # self.use_norm = conf.get("DiffMG", "use_norm")
-            # self.out_nl = conf.get("DiffMG", "out_nl")
         elif self.model_name == 'AEHCL':
             self.lr = conf.getfloat("AEHCL", "lr")
             self.hidden_dim = conf.getint("AEHCL", "hidden_dim")
