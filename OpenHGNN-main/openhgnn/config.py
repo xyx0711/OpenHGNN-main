@@ -792,6 +792,9 @@ class Config(object):
             self.num_of_attention_heads = conf.getint("AEHCL", "num_of_attention_heads")
             self.t = conf.getfloat("AEHCL", "t")
             self.batch_size = conf.getint("AEHCL", "batch_size")
+            self.weight_decay = conf.getfloat("AEHCL", "weight_decay")
+            self.eval_epoch = conf.getint("AEHCL", "eval_epoch")
+            self.max_epoch = conf.getint("AEHCL", "max_epoch")
 
         if gpu == -1:
             self.device = th.device('cpu')

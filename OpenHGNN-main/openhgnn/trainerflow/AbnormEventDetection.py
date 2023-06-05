@@ -100,14 +100,16 @@ class AbnormEventDetection(BaseFlow):
             self.batch_size, shuffle=False, device=self.device)
         num_of_batch = len(event_list)
         scores = None
-        test_epoch_iter = tqdm(range(num_of_batch))
-        for i in test_epoch_iter:
-            self.optimizer.zero_grad()
-            score = self.model(event_list[i], pos_event_list[i], neg_event_list[i], neg_context_list[i], neg_entity_list[i], event_mask[i], type_num[i])
-            if scores is None:
-                scores = score
-            else:
-                scores = torch.cat((scores, score), 0)
+        with torch.no_grad():
+            test_epoch_iter = tqdm(range(num_of_batch))
+            for i in test_epoch_iter:
+                self.optimizer.zero_grad()
+                score = self.model(event_list[i], pos_event_list[i], neg_event_list[i], neg_context_list[i],
+                                   neg_entity_list[i], event_mask[i], type_num[i])
+                if scores is None:
+                    scores = score
+                else:
+                    scores = torch.cat((scores, score), 0)
         # scores = scores.tolist()
         # print("scores=", scores)
         # print("event_label=", event_label)

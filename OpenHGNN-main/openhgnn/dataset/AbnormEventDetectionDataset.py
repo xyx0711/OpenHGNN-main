@@ -6,6 +6,8 @@ from dgl.data.utils import load_graphs
 import torch as th
 from . import BaseDataset, register_dataset
 
+from tqdm import tqdm
+
 
 # class Node:
 #     def __init__(self, type, num):
@@ -16,9 +18,7 @@ from . import BaseDataset, register_dataset
 @register_dataset('abnorm_event_detection')
 class AbnormEventDetectionDataset(BaseDataset):
     r"""
-    The class *AbnormalEventDetectionDataset* is a base class for datasets which can be used in task *abnormal event detection*.
-    So its subclass should contain attributes such as graph, center, event and so on.
-    Besides, it should implement the functions *get_labels()*.
+    The class *AbnormalEventDetectionDataset* is a class for datasets which can be used in task *abnormal event detection*.
 
     Attributes
     -------------
@@ -169,95 +169,101 @@ class AbnormEventDetectionDataset(BaseDataset):
         events_context_type_node = []
         center_node_number = self.g.num_nodes(self.center_type)
 
-        for i in range(center_node_number):
-            print("get event:" + str(i) + " / " + str(center_node_number))
-            event = [(self.center_type, i)]
-            edge_types_ = self.g.canonical_etypes
-            event_context_type_node = dict()
-            for edge_type_ in edge_types_:
-                edge_type = edge_type_[1]
-                node_type = edge_type_[2]
-                node_list = self.g.out_edges(i, etype=edge_type)[1]
-                # print(node_list)
-                event_context_type_node[node_type] = node_list.tolist()
-                for j in node_list:
-                    event.append((node_type, int(j)))
-            events_context_type_node.append(event_context_type_node)
-            self.event_list.append(event)
+        with tqdm(range(center_node_number), desc='get event') as tbar:
+            for i in tbar:
+                # print("get event:" + str(i) + " / " + str(center_node_number))
+                event = [(self.center_type, i)]
+                edge_types_ = self.g.canonical_etypes
+                event_context_type_node = dict()
+                for edge_type_ in edge_types_:
+                    edge_type = edge_type_[1]
+                    node_type = edge_type_[2]
+                    node_list = self.g.out_edges(i, etype=edge_type)[1]
+                    # print(node_list)
+                    event_context_type_node[node_type] = node_list.tolist()
+                    for j in node_list:
+                        event.append((node_type, int(j)))
+                events_context_type_node.append(event_context_type_node)
+                self.event_list.append(event)
 
-        for i in range(center_node_number):
-            print("get type num:" + str(i) + " / " + str(center_node_number))
-            event = self.event_list[i]
-            type_num = dict()
-            for node in event:
-                if node[0] not in type_num.keys():
-                    type_num[node[0]] = 1
-                else:
-                    type_num[node[0]] += 1
-            for key in type_num.keys():
-                if key not in self.type_max_num.keys():
-                    self.type_max_num[key] = type_num[key]
-                else:
-                    if type_num[key] > self.type_max_num[key]:
+        with tqdm(range(center_node_number), desc='get type num') as tbar:
+            for i in tbar:
+                # print("get type num:" + str(i) + " / " + str(center_node_number))
+                event = self.event_list[i]
+                type_num = dict()
+                for node in event:
+                    if node[0] not in type_num.keys():
+                        type_num[node[0]] = 1
+                    else:
+                        type_num[node[0]] += 1
+                for key in type_num.keys():
+                    if key not in self.type_max_num.keys():
                         self.type_max_num[key] = type_num[key]
+                    else:
+                        if type_num[key] > self.type_max_num[key]:
+                            self.type_max_num[key] = type_num[key]
 
         # get event's positive and negative event
-        have_the_node_dict = dict()
-        for i in range(center_node_number):
-            print("process pos and neg event:" + str(i) + " / " + str(center_node_number))
-            for key in events_context_type_node[i].keys():
-                if key not in have_the_node_dict.keys():
-                    have_the_node_dict[key] = dict()
-                for node_num in events_context_type_node[i][key]:
-                    if node_num not in have_the_node_dict[key].keys():
-                        have_the_node_dict[key][node_num] = []
-                    have_the_node_dict[key][node_num].append(i)
-        for i in range(center_node_number):
-            print("get pos and neg event:" + str(i) + " / " + str(center_node_number))
-            pos_event_num_set = set()
-            neg_event_num_set = set()
-            meta_times = dict()
-            for j in range(1000):
-                can_use = False
-                while can_use is False:
-                    num = random.randint(0, center_node_number - 1)
-                    can_use = True
-                    for key in events_context_type_node[i].keys():
-                        if len(set(events_context_type_node[i][key]) & set(events_context_type_node[num][key])) > 0:
-                            can_use = False
-                    if num in neg_event_num_set:
-                        can_use = False
-                neg_event_num_set.add(num)
 
-            for key in events_context_type_node[i].keys():
-                for node_num in events_context_type_node[i][key]:
-                    for num in have_the_node_dict[key][node_num]:
-                        if num != i:
-                            if num not in meta_times.keys():
-                                meta_times[num] = 1
-                            else:
-                                meta_times[num] = meta_times[num] + 1
-            maxn = 0
-            for key, value in meta_times.items():
-                if value > maxn:
-                    maxn = value
-            print("maxn=", maxn)
-            if maxn == 0:
+        have_the_node_dict = dict()
+        with tqdm(range(center_node_number), desc='process pos and neg event') as tbar:
+            for i in tbar:
+                # print("process pos and neg event:" + str(i) + " / " + str(center_node_number))
+                for key in events_context_type_node[i].keys():
+                    if key not in have_the_node_dict.keys():
+                        have_the_node_dict[key] = dict()
+                    for node_num in events_context_type_node[i][key]:
+                        if node_num not in have_the_node_dict[key].keys():
+                            have_the_node_dict[key][node_num] = []
+                        have_the_node_dict[key][node_num].append(i)
+
+        with tqdm(range(center_node_number), desc='get pos and neg event') as tbar:
+            for i in tbar:
+                # print("get pos and neg event:" + str(i) + " / " + str(center_node_number))
+                pos_event_num_set = set()
+                neg_event_num_set = set()
+                meta_times = dict()
                 for j in range(1000):
                     can_use = False
                     while can_use is False:
                         num = random.randint(0, center_node_number - 1)
                         can_use = True
-                        if num in pos_event_num_set:
+                        for key in events_context_type_node[i].keys():
+                            if len(set(events_context_type_node[i][key]) & set(events_context_type_node[num][key])) > 0:
+                                can_use = False
+                        if num in neg_event_num_set:
                             can_use = False
-                    pos_event_num_set.add(num)
-            else:
-                for key, value in meta_times.items():
-                    if value == maxn:
-                        pos_event_num_set.add(key)
+                    neg_event_num_set.add(num)
 
-            self.neg_event_set_list.append(neg_event_num_set)
-            self.pos_event_set_list.append(pos_event_num_set)
+                for key in events_context_type_node[i].keys():
+                    for node_num in events_context_type_node[i][key]:
+                        for num in have_the_node_dict[key][node_num]:
+                            if num != i:
+                                if num not in meta_times.keys():
+                                    meta_times[num] = 1
+                                else:
+                                    meta_times[num] = meta_times[num] + 1
+                maxn = 0
+                for key, value in meta_times.items():
+                    if value > maxn:
+                        maxn = value
+                # print("maxn=", maxn)
+                if maxn == 0:
+                    for j in range(1000):
+                        can_use = False
+                        while can_use is False:
+                            num = random.randint(0, center_node_number - 1)
+                            can_use = True
+                            if num in pos_event_num_set:
+                                can_use = False
+                        pos_event_num_set.add(num)
+                else:
+                    for key, value in meta_times.items():
+                        if value == maxn:
+                            pos_event_num_set.add(key)
+
+                self.neg_event_set_list.append(neg_event_num_set)
+                self.pos_event_set_list.append(pos_event_num_set)
 
             # minn = 100
             # maxn = 0
@@ -299,42 +305,44 @@ class AbnormEventDetectionDataset(BaseDataset):
         all_type_set = dict()
         relation_type = dict()
         self.pos_node_set_dict = dict()
-        for i in range(center_node_number):
-            print("get pos node:" + str(i) + " / " + str(center_node_number))
-            event = self.event_list[i]
-            for node in event:
-                if node[0] not in all_type_set.keys():
-                    all_type_set[node[0]] = set()
-                if node[0] not in self.pos_node_set_dict.keys():
-                    self.pos_node_set_dict[node[0]] = dict()
-                if node[1] not in self.pos_node_set_dict[node[0]].keys():
-                    self.pos_node_set_dict[node[0]][node[1]] = set()
-                all_type_set[node[0]].add(node)
-                for node1 in event:
-                    if node != node1:
-                        if node[0] not in relation_type.keys():
-                            relation_type[node[0]] = set()
-                        relation_type[node[0]].add(node1[0])
-                        self.pos_node_set_dict[node[0]][node[1]].add(node1)
+        with tqdm(range(center_node_number), desc='get pos node') as tbar:
+            for i in tbar:
+                # print("get pos node:" + str(i) + " / " + str(center_node_number))
+                event = self.event_list[i]
+                for node in event:
+                    if node[0] not in all_type_set.keys():
+                        all_type_set[node[0]] = set()
+                    if node[0] not in self.pos_node_set_dict.keys():
+                        self.pos_node_set_dict[node[0]] = dict()
+                    if node[1] not in self.pos_node_set_dict[node[0]].keys():
+                        self.pos_node_set_dict[node[0]][node[1]] = set()
+                    all_type_set[node[0]].add(node)
+                    for node1 in event:
+                        if node != node1:
+                            if node[0] not in relation_type.keys():
+                                relation_type[node[0]] = set()
+                            relation_type[node[0]].add(node1[0])
+                            self.pos_node_set_dict[node[0]][node[1]].add(node1)
 
         self.neg_node_set_dict = dict()
         for key in all_type_set.keys():
             self.neg_node_set_dict[key] = dict()
-            for node in all_type_set[key]:
-                print(key, '--', node[1])
-                self.neg_node_set_dict[key][node[1]] = set()
-                for tp in relation_type[key]:
-                    # if len(all_type_set[tp]) > 50:
-                    #     all_type_use = random.sample(all_type_set[tp], 50)
-                    # else:
-                    #     all_type_use = all_type_set[tp]
-                    for node1 in all_type_set[tp]:
-                        if node != node1 and (node1 not in self.pos_node_set_dict[node[0]][node[1]]):
-                            self.neg_node_set_dict[key][node[1]].add(node1)
-                if len(self.neg_node_set_dict[key][node[1]]) > 1000:
-                    temp = random.sample(self.neg_node_set_dict[key][node[1]], 1000)
-                    del self.neg_node_set_dict[key][node[1]]
-                    self.neg_node_set_dict[key][node[1]] = set(temp)
+            with tqdm(all_type_set[key], desc='get neg node '+key) as tbar:
+                for node in tbar:
+                    # print(key, '--', node[1])
+                    self.neg_node_set_dict[key][node[1]] = set()
+                    for tp in relation_type[key]:
+                        # if len(all_type_set[tp]) > 50:
+                        #     all_type_use = random.sample(all_type_set[tp], 50)
+                        # else:
+                        #     all_type_use = all_type_set[tp]
+                        for node1 in all_type_set[tp]:
+                            if node != node1 and (node1 not in self.pos_node_set_dict[node[0]][node[1]]):
+                                self.neg_node_set_dict[key][node[1]].add(node1)
+                    if len(self.neg_node_set_dict[key][node[1]]) > 1000:
+                        temp = random.sample(self.neg_node_set_dict[key][node[1]], 1000)
+                        del self.neg_node_set_dict[key][node[1]]
+                        self.neg_node_set_dict[key][node[1]] = set(temp)
 
         self.max_type_features_len = self.g.nodes[self.center_type].data['features'].shape[1]
         for tp in self.context_type:
