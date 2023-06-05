@@ -54,7 +54,8 @@ SUPPORTED_TASKS = {
     'recommendation': 'openhgnn.tasks.recommendation',
     'embedding': 'openhgnn.tasks.embedding',
     'edge_classification': 'openhgnn.tasks.edge_classification',
-    'hypergraph': 'openhgnn.tasks.hypergraph'
+    'hypergraph': 'openhgnn.tasks.hypergraph',
+    'abnorm_event_detection': 'openhgnn.tasks.AbnormEventDetection'
 }
 
 from .node_classification import NodeClassification
